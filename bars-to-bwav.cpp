@@ -20,11 +20,21 @@ bool createDirIfNotExist(const string& pathToCreate){
     return true;
 }
 
+void displayHelp(){
+    cout << "Usage: bars-to-bwav <bars file or folder containing bars files> [bwav output folder]" << endl;
+}
+
 int main(int argc, char const *argv[])
 {
     if(argc < 2){
         cout << "Missing file arguments!" << endl;
+        displayHelp();
         return -1;
+    }
+
+    if(argc == 2 && argv[1] == "-h"){
+        displayHelp();
+        return 0;
     }
 
     vector<string> barsFiles;
