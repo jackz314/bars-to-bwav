@@ -22,6 +22,7 @@ bool createDirIfNotExist(const string& pathToCreate){
 
 void displayHelp(){
     cout << "Usage: bars-to-bwav <bars file or folder containing bars files> [bwav output folder]" << endl;
+    cout << "or: `bars-to-bwav -h` to bring out this menu." << endl;
 }
 
 int main(int argc, char const *argv[])
@@ -32,7 +33,7 @@ int main(int argc, char const *argv[])
         return -1;
     }
 
-    if(argc == 2 && argv[1] == "-h"){
+    if(argc == 2 && string(argv[1]) == "-h"){
         displayHelp();
         return 0;
     }
