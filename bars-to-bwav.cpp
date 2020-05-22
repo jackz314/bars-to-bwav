@@ -1,3 +1,7 @@
+/* Copyright (C) 2020 Jack Zhang (jackz314) - All Rights Reserved
+ * You may use, distribute and modify this code under the
+ * terms of the MIT license */
+
 #include <iostream>
 #include <fstream>
 #include <vector>
