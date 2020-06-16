@@ -5,10 +5,9 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <algorithm>    // std::find
 
-//for directory related stuff, need C++ 17
-#include <filesystem>
+//for directory related stuff, need boost
+#include <boost/filesystem.hpp> 
 
 using namespace std;
 
@@ -16,9 +15,9 @@ bool VERBOSE = false;
 
 bool createDirIfNotExist(const string& pathToCreate){
     //create output directory if it doesn't exist
-    filesystem::path dir(pathToCreate);
-    if(!filesystem::exists(dir)){
-        if(!filesystem::create_directory(dir)){
+    boost::filesystem::path dir(pathToCreate);
+    if(!boost::filesystem::exists(dir)){
+        if(!boost::filesystem::create_directory(dir)){
             cout << "Failed to create directory: " << pathToCreate << endl;
             return false;
         }
@@ -45,11 +44,11 @@ int main(int argc, char const *argv[])
     }
 
     vector<string> barsFiles;
-    if(filesystem::is_directory(argv[1])){// process a directory of bars files
-        filesystem::directory_iterator end_itr;
-        filesystem::path p(argv[1]);
+    if(boost::filesystem::is_directory(argv[1])){// process a directory of bars files
+        boost::filesystem::directory_iterator end_itr;
+        boost::filesystem::path p(argv[1]);
         cout << "BARS file to be processed in directory " << argv[1] << ':' << endl;
-        for(filesystem::directory_iterator itr(p); itr != end_itr; itr++){
+        for(boost::filesystem::directory_iterator itr(p); itr != end_itr; itr++){
             //only deal with bars files
             if (is_regular_file(itr->path()) && itr->path().extension().generic_string() == ".bars") {
                 string fileName = itr->path().string();
@@ -150,7 +149,7 @@ int main(int argc, char const *argv[])
         }
 
         //write bwav files
-        string onlyBarsFileName = filesystem::path(barsFile).filename().string();
+        string onlyBarsFileName = boost::filesystem::path(barsFile).filename().string();
         string outputDir = onlyBarsFileName.substr(0, onlyBarsFileName.size() - 5) + '/';//remove the extension and add directory slash
         cout << "Output subdirectory: " << outputDir << endl;
         if(!createDirIfNotExist(baseOutputDir + outputDir)) return -3;
@@ -168,10 +167,10 @@ int main(int argc, char const *argv[])
             string oFilePath = baseOutputDir + outputDir + fName;
 
             //deal with duplicate file names, already dealt with before, here to deal with pre-existing ones
-            if(filesystem::exists(oFilePath)){//don't overwrite
+            if(boost::filesystem::exists(oFilePath)){//don't overwrite
                 int repeatCounter = 1;
                 string newOFilePath = oFilePath.substr(0,oFilePath.size()-5) + '-';
-                while(filesystem::exists(newOFilePath + to_string(repeatCounter) + ".bwav")){//already exists, use another name
+                while(boost::filesystem::exists(newOFilePath + to_string(repeatCounter) + ".bwav")){//already exists, use another name
                     repeatCounter++;
                 }
                 oFilePath = newOFilePath + to_string(repeatCounter) + ".bwav";
@@ -189,6 +188,7 @@ int main(int argc, char const *argv[])
 
     cout << spliter << spliter << endl;
     cout << "Done! Processed " << dec << barsFiles.size() << " BARS files and generated " << totalBWAVCount << " BWAV files in total." << endl;
+
 
     return 0;
 }

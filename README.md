@@ -9,12 +9,20 @@ BARS files are usually used as sound containers in newer Nintendo Switch games (
 The extracted BWAV files can then be opened or converted to other more common format elsewhere (I recommend [vgmstream](https://github.com/losnoco/vgmstream)), they are essentially a new container for sound data encoded in one of the two ways, either plain 16-bit little endian PCM (usually shorter sound effects), or Nintendo's DSP 4-bit ADPCM (longer ones).
 
 ## Set-up & Run
-This code depends on [boost](https://www.boost.org/) for directory related stuff (maybe I should've tried C++ 17 for native support). Other than that just run `make` to build.
+This code depends on the filesystem API that's introduced in C++17 (or C++14 experimental, change from `#include<filesystem>` to `#include<experimental/filesystem>` if you have to use C++14) for directory related stuff. If you can't use C++ 17, there's an alternate [boost](https://www.boost.org/) supported version, run `make compile-boost` to build that version. 
 
-This code is written and tested on Ubuntu 20.04, it's technically cross-platform but I didn't test it elsewhere.
+Run `make` to build the default executable.
+
+This code is written and roughly tested on Ubuntu 20.04, it's technically cross-platform but I didn't test it elsewhere.
 
 ## Usage
 ```bash
 bars-to-bwav <bars file or folder containing bars files> [bwav output folder]
 `bars-to-bwav -h` to bring out the help menu.
 ```
+
+## C++ Standard
+[C++17](https://gcc.gnu.org/projects/cxx-status.html#cxx17) is mostly [supported](https://gcc.gnu.org/onlinedocs/libstdc++/manual/status.html#status.iso.2017) since GCC 5, although it seems that the specific [filesystem APIs](http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0218r1.html) are not supported until GCC 8.1. Unless you are using a really old GCC version, you should be fine.
+Use `g++ --version` to check for your `g++` version, and you can grade it to the latest version (on Ubuntu) with `sudo apt install gcc g++`.
+
+You can run `make test-cpp` to test if you are using C++17.
