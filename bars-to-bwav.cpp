@@ -13,6 +13,7 @@
 using namespace std;
 
 bool VERBOSE = false;
+bool OVERWRITE = true;
 
 bool createDirIfNotExist(const string& pathToCreate){
     //create output directory if it doesn't exist
@@ -27,8 +28,9 @@ bool createDirIfNotExist(const string& pathToCreate){
 }
 
 void displayHelp(){
-    cout << "Usage: bars-to-bwav <bars file or folder containing bars files> [bwav output folder]" << endl;
+    cout << "Usage: bars-to-bwav <bars file or folder containing bars files> [bwav output folder] [--no-overwrite]" << endl;
     cout << "or: `bars-to-bwav -h` to bring out this menu." << endl;
+    cout << "add --no-overwrite flag to prevent from overwriting files with the same names." << endl;
 }
 
 int main(int argc, char const *argv[])
@@ -64,8 +66,18 @@ int main(int argc, char const *argv[])
     }
 
     string baseOutputDir;
-    if(argc > 2){// have output folder
-        baseOutputDir = argv[2];
+    if(argc > 2){// have output folder or no overwrite
+        if(argc == 4 && string(argv[3]) == "--no-overwrite"){ // have no overwrite and output folder
+            baseOutputDir = argv[2];
+            OVERWRITE = false;
+        }
+        if(argc == 3 && string(argv[2]) == "--no-overwrite"){ // only no overwrite
+            baseOutputDir = "BWAV-Output/";
+            OVERWRITE = false;
+        }else{ // only out dir
+            cout << '['<<argv[2]<<']' << endl;
+            baseOutputDir = argv[2];
+        }
         if(baseOutputDir.back() != '/' || baseOutputDir.back() != '\\'){
             baseOutputDir += '/';
         }
@@ -105,7 +117,7 @@ int main(int argc, char const *argv[])
             if(fBuf[i] == 0x42 && fBuf[i+1] == 0x57 && fBuf[i+2] == 0x41 && fBuf[i+3] == 0x56){
                 //matched BWAV, send to start offsets
                 startOffsets.push_back(i);
-               if(VERBOSE) cout << "Found BWAV at offset 0x" << hex << i << "                                        \r";
+               if(VERBOSE) cout << "Found BWAV at offset 0x" << hex << i <<endl;
             }
 
             //Hex representation of BARS's AMTA header start (AMTA: 0x41 0x4D 0x54 0x41)
@@ -122,6 +134,12 @@ int main(int argc, char const *argv[])
                 }
                 //go to file name end
                 for(streamoff j = nameStart; j < barsSize; j++, nameLen++){
+                    // cout << "CHAR:[" << fBuf[j] << "]. Int: " << int(fBuf[j]) << endl;
+                    if(fBuf[j] == -0x3e){ // some files needs to move start idx forward if -c2 is present, inconsistent
+                        // cout << "FOUND -3e" << endl; // c2 in signed byte is -3e
+                        nameStart = j + 1;
+                        nameLen = -1; // so it's 0 when the next iteration begins
+                    }
                     if(fBuf[j] == '\0') break; // end of name, null
                 }
                 string name = string(fBuf.begin() + nameStart, fBuf.begin() + nameStart + nameLen);
@@ -134,7 +152,7 @@ int main(int argc, char const *argv[])
                     name += '-' + to_string(repeatCounter);
                 }
                 audioNames.push_back(name);
-                if(VERBOSE) cout << "Found AMTA tag at offset 0x" << hex << i << " Name: " << name << "                                        \r";
+                if(VERBOSE) cout << "Found AMTA tag at offset 0x" << hex << i << " Name: " << name << endl;
             }
         }
 
@@ -164,11 +182,11 @@ int main(int argc, char const *argv[])
             }
             streamsize writeSize = nextOffset - offset;
             string fName = audioNames[i] + ".bwav";
-            if(VERBOSE) cout << dec << '(' << i+1 << '/' << startOffsets.size() << ") Writing " << fName << " from offset 0x" << hex << offset << "                                        \r";
+            if(VERBOSE) cout << dec << '(' << i+1 << '/' << startOffsets.size() << ") Writing " << fName << " from offset 0x" << hex << offset << endl;
             string oFilePath = baseOutputDir + outputDir + fName;
 
             //deal with duplicate file names, already dealt with before, here to deal with pre-existing ones
-            if(filesystem::exists(oFilePath)){//don't overwrite
+            if(!OVERWRITE && filesystem::exists(oFilePath)){//don't overwrite
                 int repeatCounter = 1;
                 string newOFilePath = oFilePath.substr(0,oFilePath.size()-5) + '-';
                 while(filesystem::exists(newOFilePath + to_string(repeatCounter) + ".bwav")){//already exists, use another name
@@ -179,7 +197,7 @@ int main(int argc, char const *argv[])
 
             fstream oFile(oFilePath, ios::out | ios::binary);
             if(!oFile.write(fBuf.data()+offset, writeSize)){
-                cout << "Write bwav failed. Count: " << dec << i << " Offset: 0x" << hex << offset << endl;
+                cout << "Write bwav failed. Path: [" << oFilePath << "] Count: " << dec << i << " Offset: 0x" << hex << offset << endl;
             }else{
                 ++totalBWAVCount;
             }
