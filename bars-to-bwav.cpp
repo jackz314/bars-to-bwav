@@ -172,6 +172,7 @@ int main(int argc, char const *argv[])
         string outputDir = onlyBarsFileName.substr(0, onlyBarsFileName.size() - 5) + '/';//remove the extension and add directory slash
         cout << "Output subdirectory: " << outputDir << endl;
         if(!createDirIfNotExist(baseOutputDir + outputDir)) return -3;
+        int illegal_counter = 0;
         for(size_t i = 0; i < startOffsets.size(); i++){
             streamoff offset = startOffsets[i];
             streamoff nextOffset;
@@ -196,8 +197,16 @@ int main(int argc, char const *argv[])
             }
 
             fstream oFile(oFilePath, ios::out | ios::binary);
-            if(!oFile.write(fBuf.data()+offset, writeSize)){
-                cout << "Write bwav failed. Path: [" << oFilePath << "] Count: " << dec << i << " Offset: 0x" << hex << offset << endl;
+            if(!oFile.write(fBuf.data()+offset, writeSize)){// if failed, probably due to illegal name
+                ++illegal_counter;
+                oFilePath = baseOutputDir + outputDir + "illegal_name_" + to_string(illegal_counter) + ".bwav";
+                fstream oFileRetry(oFilePath, ios::out | ios::binary); // try again
+                if(!oFileRetry.write(fBuf.data()+offset, writeSize)){ // still failed
+                    cout << "Write bwav failed. Path: [" << oFilePath << "] Count: " << dec << i << " Offset: 0x" << hex << offset << endl;
+                }else{
+                    ++totalBWAVCount;
+                }
+                oFileRetry.close();
             }else{
                 ++totalBWAVCount;
             }
