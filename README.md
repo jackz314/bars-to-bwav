@@ -15,6 +15,8 @@ Run `make` to build the default executable.
 
 This code is written and roughly tested on Ubuntu 20.04 and Windows 10 (using [MinGW](http://www.mingw.org/)), it should be cross-platform, but I didn't test it elsewhere.
 
+Built executables for Ubuntu and Windows can be found in the [releases](https://github.com/jackz314/bars-to-bwav/releases) section.
+
 ## Usage
 ```bash
 bars-to-bwav <bars file or folder containing bars files> [bwav output folder] [--no-overwrite]
